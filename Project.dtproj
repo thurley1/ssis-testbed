@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/SqlServer/SSIS">
+  <Name>AcmeAutomationEtl</Name>
+  <DeploymentModel>Project</DeploymentModel>
+  <Packages>
+    <Package>
+      <Name>ControlFlow.dtsx</Name>
+    </Package>
+    <Package>
+      <Name>DataFlow.dtsx</Name>
+    </Package>
+    <Package>
+      <Name>EmbeddedConnection.dtsx</Name>
+    </Package>
+    <Package>
+      <Name>Unsupported.dtsx</Name>
+    </Package>
+    <Package>
+      <Name>Malformed.dtsx</Name>
+    </Package>
+  </Packages>
+</Project>

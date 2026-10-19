@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- PackageFormatVersion 3 is below the supported set {6, 8}. It is well-formed XML and would parse
+     happily if nobody looked at the version — which is the point. The refId attributes that carry
+     data-flow identity are a 2012-format artefact, so a package below the baseline has no stable key
+     for its lineage: it is partial FOR THAT REASON, not merely for its version number. -->
+<DTS:Executable xmlns:DTS="www.microsoft.com/SqlServer/Dts"
+                DTS:ObjectName="Unsupported"
+                DTS:ExecutableType="Microsoft.Package"
+                DTS:PackageFormatVersion="3">
+  <DTS:Executables>
+    <DTS:Executable DTS:ObjectName="LegacyStep" DTS:ExecutableType="Microsoft.ExecuteSQLTask" />
+  </DTS:Executables>
+</DTS:Executable>

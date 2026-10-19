@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DTS:Executable xmlns:DTS="www.microsoft.com/SqlServer/Dts"
+                DTS:ObjectName="ControlFlow"
+                DTS:ExecutableType="Microsoft.Package"
+                DTS:PackageFormatVersion="8"
+                DTS:refId="Package">
+  <DTS:ConnectionManagers>
+    <DTS:ConnectionManager DTS:ObjectName="StagingDb" DTS:CreationName="OLEDB"
+                           DTS:refId="Package.ConnectionManagers[StagingDb]">
+      <DTS:ObjectData>
+        <DTS:ConnectionManager
+          DTS:ConnectionString="Data Source=sql01;Initial Catalog=Staging;User ID=etl_svc;Password=Fixture-Pw-C3;" />
+      </DTS:ObjectData>
+    </DTS:ConnectionManager>
+  </DTS:ConnectionManagers>
+  <DTS:Executables>
+    <DTS:Executable DTS:ObjectName="TruncateStaging"
+                    DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+                    DTS:refId="Package\TruncateStaging" />
+    <DTS:Executable DTS:ObjectName="LoadOrders"
+                    DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+                    DTS:refId="Package\LoadOrders" />
+    <DTS:Executable DTS:ObjectName="ArchiveFile"
+                    DTS:ExecutableType="Microsoft.FileSystemTask"
+                    DTS:refId="Package\ArchiveFile" />
+    <DTS:Executable DTS:ObjectName="NotifyOps"
+                    DTS:ExecutableType="Microsoft.SendMailTask"
+                    DTS:refId="Package\NotifyOps" />
+  </DTS:Executables>
+  <DTS:PrecedenceConstraints>
+    <!-- EvalOp arm 1 of 4: Constraint, plain success. -->
+    <DTS:PrecedenceConstraint DTS:ObjectName="Constraint1"
+                              DTS:From="Package\TruncateStaging"
+                              DTS:To="Package\LoadOrders"
+                              DTS:EvalOp="Constraint"
+                              DTS:Value="Success" />
+    <!-- EvalOp arm 2 of 4: ExpressionAndConstraint. Carries BOTH a condition and an expression. -->
+    <DTS:PrecedenceConstraint DTS:ObjectName="Constraint2"
+                              DTS:From="Package\LoadOrders"
+                              DTS:To="Package\ArchiveFile"
+                              DTS:EvalOp="ExpressionAndConstraint"
+                              DTS:Value="Completion"
+                              DTS:Expression="@[User::RowCount] &gt; 0" />
+    <!-- EvalOp arm 3 of 4: Constraint on the failure branch, and DTS:Value in its NUMERIC form (1 =
+         Failure), which real packages also emit. A parser that only reads the words loses this edge. -->
+    <DTS:PrecedenceConstraint DTS:ObjectName="Constraint3"
+                              DTS:From="Package\LoadOrders"
+                              DTS:To="Package\NotifyOps"
+                              DTS:EvalOp="Constraint"
+                              DTS:Value="1" />
+    <!-- EvalOp arm 4 of 4: ExpressionOrConstraint. -->
+    <DTS:PrecedenceConstraint DTS:ObjectName="Constraint4"
+                              DTS:From="Package\ArchiveFile"
+                              DTS:To="Package\NotifyOps"
+                              DTS:EvalOp="ExpressionOrConstraint"
+                              DTS:Value="Success"
+                              DTS:Expression="@[User::NotifyAlways]" />
+    <!-- EvalOp arm Expression: gated purely on an expression, with NO condition. The vocabulary of
+         Success/Failure/Completion has no home for this edge, which is why the condition is nullable
+         and the expression is carried instead. -->
+    <DTS:PrecedenceConstraint DTS:ObjectName="Constraint5"
+                              DTS:From="Package\TruncateStaging"
+                              DTS:To="Package\ArchiveFile"
+                              DTS:EvalOp="Expression"
+                              DTS:Expression="@[User::SkipLoad] == True" />
+  </DTS:PrecedenceConstraints>
+</DTS:Executable>

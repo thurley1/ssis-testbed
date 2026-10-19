@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DTS:Executable xmlns:DTS="www.microsoft.com/SqlServer/Dts"
+                DTS:ObjectName="Malformed"
+                DTS:ExecutableType="Microsoft.Package"
+                DTS:PackageFormatVersion="8">
+  <DTS:Executables>
+    <DTS:Executable DTS:ObjectName="HalfWritten"
+                    DTS:ExecutableType="Microsoft.ExecuteSQLTask"

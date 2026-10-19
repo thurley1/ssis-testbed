@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<SSIS:Parameters xmlns:SSIS="www.microsoft.com/SqlServer/SSIS">
+  <!-- A project parameter carrying a connection string. With no .conmgr files in this estate, this is
+       the second of the only two places a connection can live. -->
+  <SSIS:Parameter SSIS:Name="StagingConnectionString">
+    <SSIS:Properties>
+      <SSIS:Property SSIS:Name="Value">Data Source=sql01;Initial Catalog=Staging;User ID=etl_svc;Password=Fixture-Pw-C3;</SSIS:Property>
+      <SSIS:Property SSIS:Name="DataType">String</SSIS:Property>
+    </SSIS:Properties>
+  </SSIS:Parameter>
+  <!-- No Value property at all. SSIS project parameters are commonly bound through SSISDB environment
+       references at deploy rather than in source, so this is the common case, not an edge case. It is
+       reported as unresolved with that reason — reporting the design-time default as if it were the
+       production value is a confidently wrong answer. -->
+  <SSIS:Parameter SSIS:Name="ArchiveRootPath">
+    <SSIS:Properties>
+      <SSIS:Property SSIS:Name="DataType">String</SSIS:Property>
+    </SSIS:Properties>
+  </SSIS:Parameter>
+</SSIS:Parameters>

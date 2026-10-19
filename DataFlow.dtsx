@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DTS:Executable xmlns:DTS="www.microsoft.com/SqlServer/Dts"
+                DTS:ObjectName="DataFlow"
+                DTS:ExecutableType="Microsoft.Package"
+                DTS:PackageFormatVersion="8"
+                DTS:refId="Package">
+  <DTS:ConnectionManagers>
+    <DTS:ConnectionManager DTS:ObjectName="OrdersFile" DTS:CreationName="FLATFILE"
+                           DTS:refId="Package.ConnectionManagers[OrdersFile]">
+      <DTS:ObjectData>
+        <DTS:ConnectionManager DTS:ConnectionString="\\fileshare\inbound\orders.csv" />
+      </DTS:ObjectData>
+    </DTS:ConnectionManager>
+    <DTS:ConnectionManager DTS:ObjectName="WarehouseDb" DTS:CreationName="OLEDB"
+                           DTS:refId="Package.ConnectionManagers[WarehouseDb]">
+      <DTS:ObjectData>
+        <DTS:ConnectionManager
+          DTS:ConnectionString="Server=sql02;Database=Warehouse;Integrated Security=SSPI;" />
+      </DTS:ObjectData>
+    </DTS:ConnectionManager>
+  </DTS:ConnectionManagers>
+  <DTS:Executables>
+    <DTS:Executable DTS:ObjectName="PrepareLanding"
+                    DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+                    DTS:refId="Package\PrepareLanding" />
+    <!-- The pipeline task. Slice 1 treats it as one task member like any other executable; slice 2
+         lifts it to its own SsisDataFlow type whose members are the components below. -->
+    <DTS:Executable DTS:ObjectName="LoadOrdersPipeline"
+                    DTS:ExecutableType="Microsoft.Pipeline"
+                    DTS:refId="Package\LoadOrdersPipeline">
+      <DTS:ObjectData>
+        <pipeline>
+          <components>
+            <component refId="Package\LoadOrdersPipeline\FlatFileSource"
+                       name="FlatFileSource"
+                       componentClassID="Microsoft.FlatFileSource">
+              <connections>
+                <connection connectionManagerRefId="Package.ConnectionManagers[OrdersFile]" />
+              </connections>
+            </component>
+            <component refId="Package\LoadOrdersPipeline\DeriveTotals"
+                       name="DeriveTotals"
+                       componentClassID="Microsoft.DerivedColumn" />
+            <component refId="Package\LoadOrdersPipeline\OrdersDestination"
+                       name="OrdersDestination"
+                       componentClassID="Microsoft.OLEDBDestination">
+              <connections>
+                <connection connectionManagerRefId="Package.ConnectionManagers[WarehouseDb]" />
+              </connections>
+              <properties>
+                <property name="OpenRowset">dbo.Orders</property>
+              </properties>
+            </component>
+          </components>
+          <paths>
+            <path refId="Package\LoadOrdersPipeline.Paths[SourceToDerive]"
+                  startId="Package\LoadOrdersPipeline\FlatFileSource.Outputs[Output]"
+                  endId="Package\LoadOrdersPipeline\DeriveTotals.Inputs[Input]" />
+            <path refId="Package\LoadOrdersPipeline.Paths[DeriveToDestination]"
+                  startId="Package\LoadOrdersPipeline\DeriveTotals.Outputs[Output]"
+                  endId="Package\LoadOrdersPipeline\OrdersDestination.Inputs[Input]" />
+          </paths>
+        </pipeline>
+      </DTS:ObjectData>
+    </DTS:Executable>
+  </DTS:Executables>
+  <DTS:PrecedenceConstraints>
+    <DTS:PrecedenceConstraint DTS:ObjectName="Constraint1"
+                              DTS:From="Package\PrepareLanding"
+                              DTS:To="Package\LoadOrdersPipeline"
+                              DTS:EvalOp="Constraint"
+                              DTS:Value="Success" />
+  </DTS:PrecedenceConstraints>
+</DTS:Executable>

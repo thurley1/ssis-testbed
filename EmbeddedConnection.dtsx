@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DTS:Executable xmlns:DTS="www.microsoft.com/SqlServer/Dts"
+                DTS:ObjectName="EmbeddedConnection"
+                DTS:ExecutableType="Microsoft.Package"
+                DTS:PackageFormatVersion="6"
+                DTS:refId="Package">
+  <DTS:ConnectionManagers>
+    <!-- Package-embedded, fully literal. This estate has no .conmgr files, so this placement and the
+         project .params are the only two places a connection can live. -->
+    <DTS:ConnectionManager DTS:ObjectName="ReportingDb" DTS:CreationName="OLEDB"
+                           DTS:refId="Package.ConnectionManagers[ReportingDb]">
+      <DTS:ObjectData>
+        <DTS:ConnectionManager
+          DTS:ConnectionString="Data Source=sql03;Initial Catalog=Reporting;User ID=rpt_svc;Password=aws:fa/reporting/pwd;" />
+      </DTS:ObjectData>
+    </DTS:ConnectionManager>
+    <!-- Expression-built: the connection string is assembled at run time from a variable. It is
+         recorded as the expression and labelled unresolved; a resolved value we guessed would be
+         worse than saying we could not resolve it. -->
+    <DTS:ConnectionManager DTS:ObjectName="DynamicTarget" DTS:CreationName="OLEDB"
+                           DTS:refId="Package.ConnectionManagers[DynamicTarget]">
+      <DTS:PropertyExpression DTS:Name="ConnectionString">"Data Source=" + @[User::TargetServer] + ";Initial Catalog=Ops;"</DTS:PropertyExpression>
+      <DTS:ObjectData>
+        <DTS:ConnectionManager DTS:ConnectionString="" />
+      </DTS:ObjectData>
+    </DTS:ConnectionManager>
+  </DTS:ConnectionManagers>
+  <DTS:Executables>
+    <DTS:Executable DTS:ObjectName="LoadConfig"
+                    DTS:ExecutableType="Microsoft.ExecuteSQLTask"
+                    DTS:refId="Package\LoadConfig" />
+    <!-- A script task is where a business rule hides. Slice 1 records its presence only: extracting
+         the C#/VB body is a second language path (open question 1), not part of this slice. -->
+    <DTS:Executable DTS:ObjectName="TransformRows"
+                    DTS:ExecutableType="Microsoft.ScriptTask"
+                    DTS:refId="Package\TransformRows" />
+  </DTS:Executables>
+  <DTS:PrecedenceConstraints>
+    <DTS:PrecedenceConstraint DTS:ObjectName="Constraint1"
+                              DTS:From="Package\LoadConfig"
+                              DTS:To="Package\TransformRows"
+                              DTS:EvalOp="Constraint"
+                              DTS:Value="Success" />
+  </DTS:PrecedenceConstraints>
+</DTS:Executable>
